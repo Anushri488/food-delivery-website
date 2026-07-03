@@ -1,5 +1,5 @@
 // ===== API CONFIGURATION =====
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://food-delivery-website-y1g9.onrender.com/api';
 
 // Token ko localStorage mein save/get karne ke helper functions
 function getToken() {

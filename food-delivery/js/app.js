@@ -633,7 +633,7 @@ async function loadMyOrders() {
 function connectSocketForTracking() {
   if (currentSocket) return; // already connected hai to dobara connect mat karo
 
-  currentSocket = io('http://localhost:5000');
+  currentSocket = io('https://food-delivery-website-y1g9.onrender.com');
 
   currentSocket.on('connect', () => {
     console.log('Live tracking connected');
