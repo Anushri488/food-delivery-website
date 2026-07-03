@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickBite — Food Delivery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <a class="nav-logo" href="#" onclick="backToHome(); return false;">
+    <div class="nav-logo-icon">🍔</div>
+    <span class="nav-logo-text">Quick<span>Bite</span></span>
+  </a>
+
+  <div class="nav-search-wrapper">
+    <span class="nav-search-icon">🔍</span>
+    <input
+      class="nav-search"
+      id="nav-search"
+      type="text"
+      placeholder="Search restaurants or dishes..."
+      oninput="handleSearch(this.value)"
+    />
+  </div>
+
+  <div class="nav-actions">
+    <button class="cart-btn" onclick="openMyOrders()" aria-label="My Orders">
+      📦 Orders
+    </button>
+    <button class="cart-btn" id="auth-btn" onclick="openAuthModal()" aria-label="Login">
+      👤 <span id="auth-btn-text">Login</span>
+    </button>
+    <button class="cart-btn" onclick="openCart()" aria-label="View Cart">
+      🛒 Cart
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+    <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== MOBILE MENU ===== -->
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-search">
+    <span class="mobile-search-icon">🔍</span>
+    <input
+      type="text"
+      id="mobile-search"
+      placeholder="Search restaurants or dishes..."
+      oninput="handleSearch(this.value)"
+    />
+  </div>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div id="home-page">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🚀 Fast Delivery • Quality Food</div>
+      <h1>Great Food,<br /><span>Delivered Fast</span></h1>
+      <p>Explore top restaurants near you and get your favorite meals delivered right to your door.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-num">6+</span>
+          <span class="hero-stat-label">Restaurants</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">36+</span>
+          <span class="hero-stat-label">Menu Items</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">30<small style="font-size:0.6em">min</small></span>
+          <span class="hero-stat-label">Avg Delivery</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <div class="filter-scroll">
+      <button class="filter-chip active" onclick="setFilter('All', this)">🍽️ All</button>
+      <button class="filter-chip" onclick="setFilter('Indian', this)">🍛 Indian</button>
+      <button class="filter-chip" onclick="setFilter('Italian', this)">🍕 Italian</button>
+      <button class="filter-chip" onclick="setFilter('American', this)">🍔 American</button>
+      <button class="filter-chip" onclick="setFilter('Japanese', this)">🍱 Japanese</button>
+      <button class="filter-chip" onclick="setFilter('Mexican', this)">🌮 Mexican</button>
+      <button class="filter-chip" onclick="setFilter('Chinese', this)">🥡 Chinese</button>
+    </div>
+    <div class="sort-bar">
+      <p class="results-count" id="results-count">Showing <strong>6</strong> restaurants</p>
+      <select class="sort-select" onchange="setSort(this.value)">
+        <option value="default">Sort: Default</option>
+        <option value="rating">⭐ Highest Rated</option>
+        <option value="delivery">🕐 Fastest Delivery</option>
+        <option value="price">💰 Lowest Delivery Fee</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Restaurant Grid -->
+  <div class="section">
+    <h2 class="section-title">Restaurants Near You</h2>
+    <div class="restaurant-grid" id="restaurant-grid"></div>
+    <div class="no-results" id="no-results">
+      <div class="no-results-icon">🔍</div>
+      <h3>No results found</h3>
+      <p>Try searching with different keywords or browse all restaurants.</p>
+    </div>
+  </div>
+
+</div><!-- end #home-page -->
+
+<!-- ===== MENU PAGE ===== -->
+<div id="menu-page" style="display:none;">
+  <div class="menu-header">
+    <div class="menu-page-inner">
+      <div class="menu-header-content">
+        <span class="menu-header-emoji" id="menu-restaurant-emoji">🍛</span>
+        <div class="menu-header-info">
+          <button class="back-btn" onclick="backToHome()">← Back to Restaurants</button>
+          <h1 class="menu-restaurant-name" id="menu-restaurant-name">Restaurant</h1>
+          <div class="menu-restaurant-meta" id="menu-restaurant-meta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-page-inner">
+    <div class="menu-layout" id="menu-content">
+      <!-- Sidebar -->
+      <div class="menu-sidebar" id="menu-sidebar"></div>
+      <!-- Items -->
+      <div class="menu-items-section" id="menu-items-content"></div>
+    </div>
+  </div>
+
+  <!-- Floating Cart Button -->
+  <div class="floating-cart" id="floating-cart" onclick="openCart()">
+    <span class="floating-cart-count" id="floating-count">0 items</span>
+    <span>🛒 View Cart</span>
+    <span class="floating-cart-total" id="floating-total">₹0</span>
+  </div>
+</div><!-- end #menu-page -->
+</div><!-- end #menu-page -->
+
+<div id="orders-page" style="display:none; max-width:800px; margin:0 auto; padding:30px 20px;">
+  <h1 style="margin-bottom:20px;">📦 My Orders</h1>
+  <button class="modal-cancel-btn" onclick="backToHome()" style="margin-bottom:20px;">← Back to Home</button>
+  <div id="orders-list"></div>
+</div>
+
+<!-- ===== CART DRAWER ===== -->
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <h2 class="cart-title">🛒 Your Cart</h2>
+    <button class="cart-close-btn" onclick="closeCart()">✕</button>
+  </div>
+
+  <div class="cart-items-list" id="cart-items-list">
+    <div class="cart-empty" id="cart-empty">
+      <div class="cart-empty-icon">🛒</div>
+      <h3>Your cart is empty</h3>
+      <p>Browse our restaurants and add items to get started!</p>
+    </div>
+  </div>
+
+  <div class="cart-footer" id="cart-footer" style="display:none;">
+    <div class="cart-totals">
+      <div class="cart-total-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">₹0</span>
+      </div>
+      <div class="cart-total-row">
+        <span>Delivery Fee</span>
+        <span id="cart-delivery">₹30</span>
+      </div>
+      <div class="cart-total-row">
+        <span>Tax (5%)</span>
+        <span id="cart-tax">₹0</span>
+      </div>
+      <div class="cart-total-row grand">
+        <span>Grand Total</span>
+        <span id="cart-grand">₹0</span>
+      </div>
+    </div>
+    <button class="checkout-btn" onclick="proceedToCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- ===== ORDER SUMMARY MODAL ===== -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="confirm-modal-header">
+      <h2 class="confirm-modal-title">📋 Order Summary</h2>
+      <button class="modal-close" onclick="closeCheckoutModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-items" id="modal-items-list"></div>
+      <div class="modal-divider"></div>
+      <div style="margin-bottom: 15px;">
+        <input type="text" id="checkout-address" placeholder="Delivery Address" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;" />
+        <input type="text" id="checkout-phone" placeholder="Phone Number" style="width:100%; padding:10px; box-sizing:border-box;" />
+      </div>
+      <div class="modal-totals">
+        <div class="modal-total-row"><span>Subtotal</span><span id="modal-subtotal">₹0</span></div>
+        <div class="modal-total-row"><span>Delivery Fee</span><span id="modal-delivery">₹30</span></div>
+        <div class="modal-total-row"><span>Tax (5%)</span><span id="modal-tax">₹0</span></div>
+        <div class="modal-total-row grand"><span>Grand Total</span><span id="modal-grand">₹0</span></div>
+      </div>
+      <button class="modal-confirm-btn" onclick="confirmOrder()">✅ Confirm Order</button>
+      <button class="modal-cancel-btn" onclick="closeCheckoutModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUCCESS MODAL ===== -->
+<div class="modal-overlay" id="success-modal-overlay">
+  <div class="modal">
+    <div class="success-modal-body">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">Order Placed!</h2>
+      <p class="success-subtitle">Your delicious food is being prepared and will be on its way soon.</p>
+      <div class="order-id" id="order-id">#ORD000000</div>
+      <p class="delivery-est">Estimated delivery: <strong id="delivery-eta">30–45 mins</strong></p>
+      <button class="order-again-btn" onclick="closeSuccessModal()">🏠 Back to Home</button>
+    </div>
+  </div>
+</div>
+<!-- ===== AUTH MODAL ===== -->
+<div class="modal-overlay" id="auth-modal-overlay">
+  <div class="modal">
+    <div class="confirm-modal-header">
+      <h2 class="confirm-modal-title" id="auth-modal-title">🔑 Login</h2>
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="auth-error" style="color: red; margin-bottom: 10px; display: none;"></div>
+
+      <!-- Login Form -->
+      <div id="login-form">
+        <input type="email" id="login-email" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <input type="password" id="login-password" placeholder="Password" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <button class="modal-confirm-btn" onclick="handleLogin()">Login</button>
+        <p style="text-align:center; margin-top:10px;">
+          Account nahi hai? <a href="#" onclick="switchToRegister(); return false;">Register karo</a>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form" style="display:none;">
+        <input type="text" id="register-name" placeholder="Full Name" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <input type="email" id="register-email" placeholder="Email" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <input type="password" id="register-password" placeholder="Password" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <input type="text" id="register-phone" placeholder="Phone" style="width:100%; padding:10px; margin-bottom:10px;" />
+        <button class="modal-confirm-btn" onclick="handleRegister()">Register</button>
+        <p style="text-align:center; margin-top:10px;">
+          Already account hai? <a href="#" onclick="switchToLogin(); return false;">Login karo</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>Made with ❤️ by <strong>QuickBite</strong> </p>
+</footer>
+
+<!-- Scripts -->
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="http://localhost:5000/socket.io/socket.io.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

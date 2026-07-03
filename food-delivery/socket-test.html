@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Socket.io Order Tracker Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h2 { color: #333; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      background: #ff5722;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #log {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      min-height: 150px;
+    }
+    .status-update {
+      padding: 10px;
+      margin: 8px 0;
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      border-radius: 4px;
+    }
+    .connected { color: green; }
+    .disconnected { color: red; }
+  </style>
+</head>
+<body>
+
+  <h2>🔴 Live Order Tracker (Test Page)</h2>
+  <p id="connectionStatus">Connecting...</p>
+
+  <label>Order ID daalo aur uska room join karo:</label>
+  <input type="text" id="orderIdInput" placeholder="Order ki _id yaha paste karo">
+  <button onclick="joinRoom()">Track This Order</button>
+
+  <div id="log">
+    <p><i>Yaha updates dikhenge...</i></p>
+  </div>
+
+  <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io('http://localhost:5000');
+
+    const statusEl = document.getElementById('connectionStatus');
+    const logEl = document.getElementById('log');
+
+    socket.on('connect', () => {
+      statusEl.innerText = '✅ Connected to server (Socket ID: ' + socket.id + ')';
+      statusEl.className = 'connected';
+    });
+
+    socket.on('disconnect', () => {
+      statusEl.innerText = '❌ Disconnected from server';
+      statusEl.className = 'disconnected';
+    });
+
+    function joinRoom() {
+      const orderId = document.getElementById('orderIdInput').value.trim();
+      if (!orderId) {
+        alert('Order ID daalo pehle');
+        return;
+      }
+      socket.emit('joinOrderRoom', orderId);
+      logEl.innerHTML += `<div class="status-update">📍 Room join kiya: ${orderId}</div>`;
+    }
+
+    socket.on('orderStatusUpdated', (data) => {
+      logEl.innerHTML += `<div class="status-update">🔔 <b>Order ${data.orderId}</b> ka status update hua: <b>${data.status}</b> (${new Date().toLocaleTimeString()})</div>`;
+    });
+  </script>
+
+</body>
+</html>
