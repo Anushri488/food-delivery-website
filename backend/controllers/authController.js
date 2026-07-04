@@ -1,71 +1,54 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
-// JWT token generate karne ka helper function
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// @desc  Register new user
-// @route POST /api/auth/register
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
 
-    // Validation
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Sab fields bharo' });
+      return res.status(400).json({ success: false, message: 'Please fill in all fields' });
     }
 
-    // Check karo user pehle se to nahi hai
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ success: false, message: 'Ye email pehle se registered hai' });
+      return res.status(400).json({ success: false, message: 'This email is already registered' });
     }
 
-    // Naya user banao
     const user = await User.create({ name, email, password, phone });
-
-    // Token generate karo
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
       message: 'Registration successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc  Login user
-// @route POST /api/auth/login
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email aur password dono do' });
+      return res.status(400).json({ success: false, message: 'Please provide both email and password' });
     }
 
-    // Password field ko explicitly select karo (kyunki model mein select:false hai)
     const user = await User.findOne({ email }).select('+password');
-
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Galat email ya password' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const isMatch = await user.matchPassword(password);
-
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Galat email ya password' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const token = generateToken(user._id);
@@ -74,38 +57,26 @@ exports.loginUser = async (req, res) => {
       success: true,
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// @desc  Get logged-in user's profile
-// @route GET /api/auth/profile
+
 exports.getProfile = async (req, res) => {
-  res.status(200).json({
-    success: true,
-    user: req.user
-  });
+  res.status(200).json({ success: true, user: req.user });
 };
-// @desc  Update logged-in user's profile
-// @route PUT /api/auth/profile
+
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
-
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User nahi mila' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Sirf jo fields bheji gayi hain unhe update karo
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (address) user.address = address;
@@ -114,7 +85,7 @@ exports.updateProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Profile update ho gaya',
+      message: 'Profile updated successfully',
       user: {
         id: updatedUser._id,
         name: updatedUser.name,
@@ -129,41 +100,34 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-
-// @desc  Forgot password - OTP bhejo email pe
-// @route POST /api/auth/forgot-password
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Is email se koi account nahi mila' });
+      return res.status(404).json({ success: false, message: 'No account found with this email' });
     }
 
-    // 6-digit OTP generate karo
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
     user.otp = otp;
-    user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minute valid
+    user.otpExpiry = Date.now() + 10 * 60 * 1000;
     await user.save();
 
     const html = `
       <h2>Password Reset OTP</h2>
-      <p>Aapka OTP hai: <b>${otp}</b></p>
-      <p>Ye OTP 10 minute mein expire ho jaayega.</p>
+      <p>Your OTP is: <b>${otp}</b></p>
+      <p>This OTP will expire in 10 minutes.</p>
     `;
 
     await sendEmail(user.email, 'Password Reset OTP', html);
 
-    res.status(200).json({ success: true, message: 'OTP aapki email pe bhej diya gaya hai' });
+    res.status(200).json({ success: true, message: 'OTP has been sent to your email' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc  Reset password using OTP
-// @route POST /api/auth/reset-password
 exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -171,7 +135,7 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (!user || user.otp !== otp || user.otpExpiry < Date.now()) {
-      return res.status(400).json({ success: false, message: 'OTP galat hai ya expire ho gaya' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
 
     user.password = newPassword;
@@ -179,7 +143,7 @@ exports.resetPassword = async (req, res) => {
     user.otpExpiry = null;
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Password reset ho gaya, ab login karo' });
+    res.status(200).json({ success: true, message: 'Password reset successful. Please log in.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

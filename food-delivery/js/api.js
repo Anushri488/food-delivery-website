@@ -49,7 +49,7 @@ async function apiCall(endpoint, method = 'GET', body = null, needsAuth = false)
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'Kuch galat ho gaya');
+    throw new Error(data.message || 'Something is wrong');
   }
 
   return data;
@@ -60,7 +60,7 @@ function openAuthModal() {
   const user = getCurrentUser();
   if (user) {
     // Agar already login hai, to logout confirm karo
-    if (confirm(`${user.name}, kya aap logout karna chahte hain?`)) {
+    if (confirm(`${user.name}, Do you want to logout?`)) {
       handleLogout();
     }
     return;
@@ -96,7 +96,7 @@ async function handleLogin() {
   const password = document.getElementById('login-password').value;
 
   if (!email || !password) {
-    showAuthError('Email aur password dono bharo');
+    showAuthError('Fill Email and Password both');
     return;
   }
 
@@ -119,7 +119,7 @@ async function handleRegister() {
   const phone = document.getElementById('register-phone').value.trim();
 
   if (!name || !email || !password) {
-    showAuthError('Naam, email, aur password zaroori hai');
+    showAuthError('Name, email, and password are required');
     return;
   }
 
@@ -139,7 +139,7 @@ function handleLogout() {
   removeToken();
   localStorage.removeItem('currentUser');
   updateAuthUI();
-  alert('Logout ho gaye');
+  alert('you are logged out');
 }
 
 function updateAuthUI() {
@@ -167,8 +167,8 @@ async function loadRestaurants() {
       menu: r.menu.map(item => ({ ...item, id: item._id }))
     }));
   } catch (error) {
-    console.error('Restaurants load karne mein error:', error);
-    alert('Restaurants load nahi ho paye. Backend server chal raha hai check karo.');
+    console.error('Error in loading Restaurants:', error);
+    alert('Restaurants can not be loaded please check backened server is running or not.');
   }
 }
 

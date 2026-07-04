@@ -1,7 +1,5 @@
 const Restaurant = require('../models/Restaurant');
 
-// @desc  Create new restaurant
-// @route POST /api/restaurants
 exports.createRestaurant = async (req, res) => {
   try {
     const restaurant = await Restaurant.create(req.body);
@@ -11,8 +9,6 @@ exports.createRestaurant = async (req, res) => {
   }
 };
 
-// @desc  Get all restaurants
-// @route GET /api/restaurants
 exports.getRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find({ isActive: true });
@@ -22,13 +18,11 @@ exports.getRestaurants = async (req, res) => {
   }
 };
 
-// @desc  Get single restaurant by ID
-// @route GET /api/restaurants/:id
 exports.getRestaurantById = async (req, res) => {
   try {
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
-      return res.status(404).json({ success: false, message: 'Restaurant nahi mila' });
+      return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
     res.status(200).json({ success: true, restaurant });
   } catch (error) {
@@ -36,8 +30,6 @@ exports.getRestaurantById = async (req, res) => {
   }
 };
 
-// @desc  Update restaurant
-// @route PUT /api/restaurants/:id
 exports.updateRestaurant = async (req, res) => {
   try {
     const restaurant = await Restaurant.findByIdAndUpdate(req.params.id, req.body, {
@@ -45,33 +37,30 @@ exports.updateRestaurant = async (req, res) => {
       runValidators: true
     });
     if (!restaurant) {
-      return res.status(404).json({ success: false, message: 'Restaurant nahi mila' });
+      return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
-    res.status(200).json({ success: true, message: 'Restaurant update ho gaya', restaurant });
+    res.status(200).json({ success: true, message: 'Restaurant updated successfully', restaurant });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc  Delete restaurant
-// @route DELETE /api/restaurants/:id
 exports.deleteRestaurant = async (req, res) => {
   try {
     const restaurant = await Restaurant.findByIdAndDelete(req.params.id);
     if (!restaurant) {
-      return res.status(404).json({ success: false, message: 'Restaurant nahi mila' });
+      return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
-    res.status(200).json({ success: true, message: 'Restaurant delete ho gaya' });
+    res.status(200).json({ success: true, message: 'Restaurant deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// @desc  Upload restaurant image
-// @route POST /api/restaurants/:id/upload-image
+
 exports.uploadRestaurantImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Koi image nahi mili' });
+      return res.status(400).json({ success: false, message: 'No image uploaded' });
     }
 
     const restaurant = await Restaurant.findByIdAndUpdate(
@@ -81,12 +70,12 @@ exports.uploadRestaurantImage = async (req, res) => {
     );
 
     if (!restaurant) {
-      return res.status(404).json({ success: false, message: 'Restaurant nahi mila' });
+      return res.status(404).json({ success: false, message: 'Restaurant not found' });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Image upload ho gayi',
+      message: 'Image uploaded successfully',
       imageUrl: req.file.path,
       restaurant
     });

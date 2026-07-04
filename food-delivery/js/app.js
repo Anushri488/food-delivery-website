@@ -429,7 +429,7 @@ async function confirmOrder() {
   const user = getCurrentUser();
   if (!user) {
     closeCheckoutModal();
-    alert('Order place karne ke liye pehle login karo!');
+    alert('Please log in to place an order!');
     openAuthModal();
     return;
   }
@@ -438,7 +438,7 @@ async function confirmOrder() {
   const phone = document.getElementById('checkout-phone').value.trim();
 
   if (!address || !phone) {
-    alert('Delivery address aur phone number dono bharo');
+    alert('Please enter both delivery address and phone number');
     return;
   }
 
@@ -466,7 +466,7 @@ async function confirmOrder() {
     // Ab payment shuru karo
     startPaymentForOrder(newOrder);
   } catch (error) {
-    alert('Order place karne mein error: ' + error.message);
+    alert('Error placing order: ' + error.message);
   }
 }
 
@@ -493,7 +493,7 @@ async function startPaymentForOrder(order) {
 
           showOrderSuccess(order);
         } catch (err) {
-          alert('Payment verify karne mein error: ' + err.message);
+          alert('Error verifying payment: ' + err.message);
         }
       },
       prefill: {
@@ -504,7 +504,7 @@ async function startPaymentForOrder(order) {
       theme: { color: '#ff5722' },
       modal: {
         ondismiss: function () {
-          alert('Payment cancel kar diya. Order place ho chuka hai (unpaid) — "My Orders" mein dekh sakti ho.');
+          alert('Payment cancelled. Your order has been placed (unpaid) — check "My Orders" to view it.');
           showOrderSuccess(order);
         }
       }
@@ -513,7 +513,7 @@ async function startPaymentForOrder(order) {
     const rzp = new Razorpay(options);
     rzp.open();
   } catch (error) {
-    alert('Payment start karne mein error: ' + error.message);
+    alert('Error starting payment: ' + error.message);
   }
 }
 
@@ -580,7 +580,7 @@ let currentSocket = null;
 async function openMyOrders() {
   const user = getCurrentUser();
   if (!user) {
-    alert('Orders dekhne ke liye pehle login karo!');
+    alert('Please log in to view your orders!');
     openAuthModal();
     return;
   }
@@ -602,7 +602,7 @@ async function loadMyOrders() {
     const data = await apiCall('/orders/my-orders', 'GET', null, true);
 
     if (data.orders.length === 0) {
-      listEl.innerHTML = '<p>Abhi tak koi order nahi hai.</p>';
+      listEl.innerHTML = '<p> You have no orders yet.</p>';
       return;
     }
 
@@ -643,7 +643,7 @@ function connectSocketForTracking() {
     const statusEl = document.getElementById(`order-status-${data.orderId}`);
     if (statusEl) {
       statusEl.textContent = data.status;
-      showToast(`Order status update hua: ${data.status}`, '🔔', 'success');
+      showToast(`Order status updated: ${data.status}`, '🔔', 'success');
     }
   });
 }

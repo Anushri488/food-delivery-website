@@ -2,24 +2,21 @@ const razorpayInstance = require('../config/razorpay');
 const Order = require('../models/Order');
 const crypto = require('crypto');
 
-// @desc  Create Razorpay order (payment shuru karne ke liye)
-// @route POST /api/payments/create-order
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order nahi mila' });
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Sirf apna order pay kar sake
     if (order.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Ye order pay karne ki permission nahi hai' });
+      return res.status(403).json({ success: false, message: 'You do not have permission to pay for this order' });
     }
 
     const options = {
-      amount: Math.round(order.totalAmount * 100), // paise mein convert karo (Razorpay paise mein leta hai)
+      amount: Math.round(order.totalAmount * 100),
       currency: 'INR',
       receipt: `receipt_${order._id}`
     };
@@ -38,66 +35,59 @@ exports.createRazorpayOrder = async (req, res) => {
   }
 };
 
-// @desc  Verify payment after user pays (security-critical step)
-// @route POST /api/payments/verify
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
 
-    // Signature verify karo — ye confirm karta hai payment genuine hai, fake nahi
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
     if (generatedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, message: 'Payment verification fail ho gayi' });
+      return res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
 
-    // Verification successful — order ko "Paid" mark karo
     const order = await Order.findByIdAndUpdate(
       orderId,
       { paymentStatus: 'Paid' },
       { new: true }
     );
 
-    res.status(200).json({ success: true, message: 'Payment verified aur successful', order });
+    res.status(200).json({ success: true, message: 'Payment verified successfully', order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// @desc  Refund a payment (admin only)
-// @route POST /api/payments/refund
+
 exports.refundPayment = async (req, res) => {
   try {
     const { orderId, razorpayPaymentId, reason } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order nahi mila' });
+      return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
     if (order.paymentStatus !== 'Paid') {
-      return res.status(400).json({ success: false, message: 'Ye order paid nahi hai, refund nahi ho sakta' });
+      return res.status(400).json({ success: false, message: 'This order is not paid, refund not possible' });
     }
 
-    // Razorpay ke through refund initiate karo
     const refund = await razorpayInstance.payments.refund(razorpayPaymentId, {
-      amount: Math.round(order.totalAmount * 100), // poora amount, paise mein
+      amount: Math.round(order.totalAmount * 100),
       notes: {
         reason: reason || 'Customer requested refund',
         orderId: order._id.toString()
       }
     });
 
-    // Order ka status update karo
     order.paymentStatus = 'Refunded';
     order.status = 'Cancelled';
     await order.save();
 
     res.status(200).json({
       success: true,
-      message: 'Refund initiate ho gaya',
+      message: 'Refund initiated successfully',
       refund,
       order
     });
