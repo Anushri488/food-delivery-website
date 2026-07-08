@@ -1,23 +1,27 @@
-const nodemailer = require('nodemailer');
-
+// Render ke free tier pe SMTP ports (25, 465, 587) blocked hain,
+// isliye nodemailer/SMTP ki jagah Brevo ki HTTP API use kar rahe hain (HTTPS pe chalti hai, SMTP pe nahi)
 const sendEmail = async (to, subject, html) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4, // IPv4 force karo — Render pe IPv6 (ENETUNREACH) fail ho raha tha
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY
+    },
+    body: JSON.stringify({
+      sender: { name: 'Food Delivery', email: process.env.EMAIL_USER },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
   });
 
-  await transporter.sendMail({
-    from: `"Food Delivery" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html
-  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Brevo API error: ${response.status}`);
+  }
+
+  return response.json();
 };
 
 module.exports = sendEmail;
